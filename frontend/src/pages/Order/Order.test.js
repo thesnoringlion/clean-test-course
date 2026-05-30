@@ -35,9 +35,10 @@ describe('Test Order', () => {
         <Order />
       </OrderContext.Provider>
     );
-    //Assert: replace the return true.
+    //Assert: verify the Delivery Fee label and amount separately.
     await waitFor(() => {
-      return true;
+      expect(screen.getByText(/Delivery Fee/i)).toBeInTheDocument();
+      expect(screen.getByText(/\$2\.50/)).toBeInTheDocument();
     });
   });
 
@@ -63,9 +64,10 @@ describe('Test Order', () => {
     );
     //Assert: replace the return true.
     await waitFor(() => {
-      return true;
+      expect(screen.getAllByText('$5.00'))
+      .toHaveLength(1);
     });
-  });
+  })
 });
 
 const setupMock = () => {
