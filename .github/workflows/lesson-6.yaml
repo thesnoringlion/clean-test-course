@@ -31,11 +31,32 @@ jobs:
   security_test:
     needs: [deploy]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm ci
+      - name: Start frontend app
+        run: npm start -- --host 0.0.0.0 &
+      - name: Wait for app to become available
+        run: |
+          n=0
+          until curl --silent --fail http://localhost:3000; do
+            n=$((n+1))
+            if [ "$n" -ge 30 ]; then
+              echo "App did not start in time"
+              exit 1
+            fi
+            sleep 2
+          done
       - name: Dynamic Application Security Scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
-          target: 'https://hangryhippo.quantic.host'
+          target: 'http://localhost:3000'
   acceptance_test:
     needs: [deploy]
     runs-on: ubuntu-latest
@@ -45,9 +66,24 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - run: cypress run --config-file=cypress.config.js
+      - run: npm ci
+      - name: Start frontend app
+        run: npm start -- --host 0.0.0.0 &
+      - name: Wait for app to become available
+        run: |
+          n=0
+          until curl --silent --fail http://localhost:3000; do
+            n=$((n+1))
+            if [ "$n" -ge 30 ]; then
+              echo "App did not start in time"
+              exit 1
+            fi
+            sleep 2
+          done
+      - name: Run Cypress acceptance tests
+        run: npx cypress run --config-file=cypress.config.js --headless
       - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: cypress-videos
-          path: frontend/cypress/videos
+          path: cypress/videos
