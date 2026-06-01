@@ -5,7 +5,7 @@ on:
     branches:
       - lesson-5
 jobs:
-  security_tests:
+  security_test:
     runs-on: ubuntu-latest
     defaults:
       run:
